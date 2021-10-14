@@ -14,6 +14,10 @@ float GetCameraFOV()
     float fov = atan(1.0f / t) * 2.0 * Rad2Deg;
     return fov;
 }
+float GetFOVFactor()
+{
+    return (1.0f/unity_CameraProjection._m11);
+}
 float ApplyOutlineDistanceFadeOut(float inputMulFix)
 {
     //make outline "fadeout" if character is too small in camera's view
@@ -31,11 +35,20 @@ float GetOutlineCameraFovAndDistanceFixMultiplier(float positionVS_Z)
         // keep outline similar width on screen accoss all camera distance       
         cameraMulFix = abs(positionVS_Z);
 
+        // keep outline similar width on screen accoss all camera fov
+        // this is done BEFORE OutlineDistanceFadeOut because, for example,
+        // a character 1m away from camera with fov of 90
+        // appears the same size in camera as a character sqrt(3)m away from camera with fov of 60
+        cameraMulFix *= GetFOVFactor();
+
         // can replace to a tonemap function if a smooth stop is needed
         cameraMulFix = ApplyOutlineDistanceFadeOut(cameraMulFix);
 
         // keep outline similar width on screen accoss all camera fov
-        cameraMulFix *= GetCameraFOV();       
+        //cameraMulFix *= GetCameraFOV();   
+        
+        //to match the outline with before this optimization. Should actually be 180 / 3.1415 (Rad2Deg), but 60 will do
+        cameraMulFix *= 60;    
     }
     else
     {
